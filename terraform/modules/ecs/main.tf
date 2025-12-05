@@ -1,3 +1,6 @@
+# Get AWS caller identity for ECR URL construction
+data "aws_caller_identity" "current" {}
+
 # ECR Repositories
 resource "aws_ecr_repository" "backend" {
   name                 = "${var.project_name}-${var.environment}-backend"
@@ -74,6 +77,40 @@ resource "aws_ecr_lifecycle_policy" "frontend" {
       }
     ]
   })
+}
+
+# Push placeholder images to ECR after repositories are created
+resource "null_resource" "push_placeholder_images" {
+  depends_on = [
+    aws_ecr_repository.backend,
+    aws_ecr_repository.frontend
+  ]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      # Authenticate to ECR
+      aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com
+      
+      # Pull a lightweight placeholder image
+      docker pull public.ecr.aws/docker/library/hello-world:latest
+      
+      # Tag and push backend placeholder image
+      docker tag public.ecr.aws/docker/library/hello-world:latest ${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${aws_ecr_repository.backend.name}:latest
+      docker push ${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${aws_ecr_repository.backend.name}:latest
+      
+      # Tag and push frontend placeholder image
+      docker tag public.ecr.aws/docker/library/hello-world:latest ${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${aws_ecr_repository.frontend.name}:latest
+      docker push ${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${aws_ecr_repository.frontend.name}:latest
+      
+      echo "Placeholder images pushed successfully to ECR"
+    EOT
+  }
+
+  # Trigger this resource whenever repositories are recreated
+  triggers = {
+    backend_repo_id  = aws_ecr_repository.backend.id
+    frontend_repo_id = aws_ecr_repository.frontend.id
+  }
 }
 
 # ECS Cluster
@@ -294,6 +331,8 @@ resource "aws_ecs_task_definition" "backend" {
   memory                   = "1024"
   execution_role_arn       = aws_iam_role.ecs_task_execution.arn
   task_role_arn            = aws_iam_role.ecs_task.arn
+  
+  depends_on = [null_resource.push_placeholder_images]
 
   container_definitions = jsonencode([
     {
@@ -387,6 +426,8 @@ resource "aws_ecs_task_definition" "frontend" {
   memory                   = "512"
   execution_role_arn       = aws_iam_role.ecs_task_execution.arn
   task_role_arn            = aws_iam_role.ecs_task.arn
+  
+  depends_on = [null_resource.push_placeholder_images]
 
   container_definitions = jsonencode([
     {
@@ -469,6 +510,8 @@ resource "aws_ecs_service" "backend" {
   task_definition = aws_ecs_task_definition.backend.arn
   desired_count   = 2
   launch_type     = "FARGATE"
+  
+  depends_on = [null_resource.push_placeholder_images]
 
   deployment_controller {
     type = "CODE_DEPLOY"
@@ -506,6 +549,8 @@ resource "aws_ecs_service" "frontend" {
   task_definition = aws_ecs_task_definition.frontend.arn
   desired_count   = 1
   launch_type     = "FARGATE"
+  
+  depends_on = [null_resource.push_placeholder_images]
 
   deployment_controller {
     type = "CODE_DEPLOY"

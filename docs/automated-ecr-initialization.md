@@ -101,6 +101,7 @@ resource "aws_ecs_service" "backend" {
 This script:
 - Checks all prerequisites
 - Initializes Terraform
+- Shows the execution plan for confirmation
 - Runs the deployment with automated image pushing
 - Provides next steps for updating to real application images
 

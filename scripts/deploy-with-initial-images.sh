@@ -78,6 +78,32 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     exit 0
 fi
 
+# Show Terraform plan for confirmation
+echo ""
+echo "Generating Terraform plan..."
+echo "This will show all resources that will be created..."
+echo ""
+
+terraform plan
+
+echo ""
+echo "=== Terraform Plan Complete ==="
+echo ""
+echo "Please review the plan above carefully."
+echo "This deployment will:"
+echo "1. Create all infrastructure including ECR repositories"
+echo "2. Automatically push placeholder images to ECR"
+echo "3. Deploy ECS services with the placeholder images"
+echo "4. Set up CodePipeline for future deployments"
+echo ""
+
+read -p "Do you want to proceed with applying this plan? (y/N): " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Deployment cancelled."
+    exit 0
+fi
+
 # Apply Terraform
 echo ""
 echo "Running Terraform apply..."

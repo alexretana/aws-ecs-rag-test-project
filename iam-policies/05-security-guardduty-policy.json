@@ -12,16 +12,7 @@
         "guardduty:ListDetectors",
         "guardduty:TagResource",
         "guardduty:UntagResource",
-        "guardduty:ListTagsForResource"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Sid": "GuardDutyFeatureManagement",
-      "Effect": "Allow",
-      "Action": [
-        "guardduty:UpdateDetectorFeature",
-        "guardduty:GetDetectorFeature",
+        "guardduty:ListTagsForResource",
         "guardduty:UpdateMemberDetectors"
       ],
       "Resource": "*"

@@ -1,0 +1,73 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "RDSInstanceManagement",
+      "Effect": "Allow",
+      "Action": [
+        "rds:CreateDBInstance",
+        "rds:DeleteDBInstance",
+        "rds:DescribeDBInstances",
+        "rds:ModifyDBInstance",
+        "rds:ListTagsForResource",
+        "rds:AddTagsToResource",
+        "rds:RemoveTagsFromResource",
+        "rds:DescribeDBEngineVersions"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "RDSSubnetGroupManagement",
+      "Effect": "Allow",
+      "Action": [
+        "rds:CreateDBSubnetGroup",
+        "rds:DeleteDBSubnetGroup",
+        "rds:DescribeDBSubnetGroups",
+        "rds:ModifyDBSubnetGroup"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "RDSParameterGroupManagement",
+      "Effect": "Allow",
+      "Action": [
+        "rds:CreateDBParameterGroup",
+        "rds:DeleteDBParameterGroup",
+        "rds:DescribeDBParameterGroups",
+        "rds:DescribeDBParameters",
+        "rds:ModifyDBParameterGroup",
+        "rds:ResetDBParameterGroup"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "RDSOptionGroupManagement",
+      "Effect": "Allow",
+      "Action": [
+        "rds:DescribeDBClusters",
+        "rds:DescribeOptionGroups"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SecretsManagerManagement",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:CreateSecret",
+        "secretsmanager:DeleteSecret",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:PutSecretValue",
+        "secretsmanager:UpdateSecret",
+        "secretsmanager:TagResource",
+        "secretsmanager:UntagResource",
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:PutResourcePolicy",
+        "secretsmanager:DeleteResourcePolicy",
+        "secretsmanager:ListSecrets",
+        "secretsmanager:ListSecretVersionIds"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

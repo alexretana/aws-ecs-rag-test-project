@@ -1,0 +1,98 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ECSClusterManagement",
+      "Effect": "Allow",
+      "Action": [
+        "ecs:CreateCluster",
+        "ecs:DeleteCluster",
+        "ecs:DescribeClusters",
+        "ecs:ListClusters",
+        "ecs:PutClusterCapacityProviders",
+        "ecs:UpdateClusterSettings",
+        "ecs:TagResource",
+        "ecs:UntagResource",
+        "ecs:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ECSTaskDefinitionManagement",
+      "Effect": "Allow",
+      "Action": [
+        "ecs:RegisterTaskDefinition",
+        "ecs:DeregisterTaskDefinition",
+        "ecs:DescribeTaskDefinition",
+        "ecs:ListTaskDefinitions"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ECSServiceManagement",
+      "Effect": "Allow",
+      "Action": [
+        "ecs:CreateService",
+        "ecs:UpdateService",
+        "ecs:DeleteService",
+        "ecs:DescribeServices",
+        "ecs:ListServices"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ServiceDiscoveryManagement",
+      "Effect": "Allow",
+      "Action": [
+        "servicediscovery:CreatePrivateDnsNamespace",
+        "servicediscovery:DeleteNamespace",
+        "servicediscovery:GetNamespace",
+        "servicediscovery:ListNamespaces",
+        "servicediscovery:CreateService",
+        "servicediscovery:DeleteService",
+        "servicediscovery:GetService",
+        "servicediscovery:ListServices",
+        "servicediscovery:UpdateService",
+        "servicediscovery:TagResource",
+        "servicediscovery:UntagResource",
+        "servicediscovery:ListTagsForResource",
+        "servicediscovery:GetOperation"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ECRRepositoryManagement",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:CreateRepository",
+        "ecr:DeleteRepository",
+        "ecr:DescribeRepositories",
+        "ecr:ListTagsForResource",
+        "ecr:TagResource",
+        "ecr:UntagResource",
+        "ecr:PutImageScanningConfiguration",
+        "ecr:PutImageTagMutability",
+        "ecr:PutLifecyclePolicy",
+        "ecr:GetLifecyclePolicy",
+        "ecr:DeleteLifecyclePolicy",
+        "ecr:SetRepositoryPolicy",
+        "ecr:GetRepositoryPolicy",
+        "ecr:DeleteRepositoryPolicy"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ECRImageManagement",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:DescribeImages",
+        "ecr:ListImages"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AccountInformation",
+      "Effect": "Allow",
+      "Action": [
+        "sts:GetCallerIdentity"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "GeneralReadAccess",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:Describe*",
+        "ecs:Describe*",
+        "ecs:List*",
+        "ecr:Describe*",
+        "ecr:List*",
+        "rds:Describe*",
+        "rds:List*",
+        "elasticloadbalancing:Describe*",
+        "logs:Describe*",
+        "logs:List*",
+        "cloudwatch:Describe*",
+        "cloudwatch:List*",
+        "cloudwatch:Get*",
+        "s3:List*",
+        "s3:Get*",
+        "iam:Get*",
+        "iam:List*",
+        "secretsmanager:List*",
+        "guardduty:Get*",
+        "guardduty:List*",
+        "xray:Get*",
+        "xray:List*",
+        "codebuild:List*",
+        "codebuild:Batch*",
+        "codedeploy:Get*",
+        "codedeploy:List*",
+        "codepipeline:Get*",
+        "codepipeline:List*",
+        "servicediscovery:Get*",
+        "servicediscovery:List*",
+        "kms:Describe*",
+        "kms:List*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

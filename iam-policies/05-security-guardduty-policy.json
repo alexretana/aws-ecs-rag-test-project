@@ -1,0 +1,30 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "GuardDutyManagement",
+      "Effect": "Allow",
+      "Action": [
+        "guardduty:CreateDetector",
+        "guardduty:DeleteDetector",
+        "guardduty:GetDetector",
+        "guardduty:UpdateDetector",
+        "guardduty:ListDetectors",
+        "guardduty:TagResource",
+        "guardduty:UntagResource",
+        "guardduty:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "GuardDutyFeatureManagement",
+      "Effect": "Allow",
+      "Action": [
+        "guardduty:UpdateDetectorFeature",
+        "guardduty:GetDetectorFeature",
+        "guardduty:UpdateMemberDetectors"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

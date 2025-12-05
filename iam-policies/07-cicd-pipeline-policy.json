@@ -1,0 +1,110 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "S3BucketManagement",
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:DeleteBucket",
+        "s3:ListBucket",
+        "s3:GetBucketLocation",
+        "s3:GetBucketVersioning",
+        "s3:PutBucketVersioning",
+        "s3:GetBucketTagging",
+        "s3:PutBucketTagging",
+        "s3:GetBucketPolicy",
+        "s3:PutBucketPolicy",
+        "s3:DeleteBucketPolicy",
+        "s3:GetEncryptionConfiguration",
+        "s3:PutEncryptionConfiguration",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:PutBucketPublicAccessBlock",
+        "s3:GetBucketAcl",
+        "s3:PutBucketAcl"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "S3ObjectManagement",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CodeBuildManagement",
+      "Effect": "Allow",
+      "Action": [
+        "codebuild:CreateProject",
+        "codebuild:DeleteProject",
+        "codebuild:BatchGetProjects",
+        "codebuild:UpdateProject",
+        "codebuild:ListProjects",
+        "codebuild:BatchGetBuilds",
+        "codebuild:StartBuild",
+        "codebuild:StopBuild"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CodeDeployManagement",
+      "Effect": "Allow",
+      "Action": [
+        "codedeploy:CreateApplication",
+        "codedeploy:DeleteApplication",
+        "codedeploy:GetApplication",
+        "codedeploy:UpdateApplication",
+        "codedeploy:ListApplications",
+        "codedeploy:CreateDeploymentGroup",
+        "codedeploy:DeleteDeploymentGroup",
+        "codedeploy:GetDeploymentGroup",
+        "codedeploy:UpdateDeploymentGroup",
+        "codedeploy:ListDeploymentGroups",
+        "codedeploy:GetDeploymentConfig",
+        "codedeploy:ListDeploymentConfigs",
+        "codedeploy:CreateDeployment",
+        "codedeploy:GetDeployment",
+        "codedeploy:ListDeployments",
+        "codedeploy:StopDeployment",
+        "codedeploy:TagResource",
+        "codedeploy:UntagResource",
+        "codedeploy:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CodePipelineManagement",
+      "Effect": "Allow",
+      "Action": [
+        "codepipeline:CreatePipeline",
+        "codepipeline:DeletePipeline",
+        "codepipeline:GetPipeline",
+        "codepipeline:UpdatePipeline",
+        "codepipeline:GetPipelineState",
+        "codepipeline:ListPipelines",
+        "codepipeline:ListPipelineExecutions",
+        "codepipeline:StartPipelineExecution",
+        "codepipeline:StopPipelineExecution",
+        "codepipeline:TagResource",
+        "codepipeline:UntagResource",
+        "codepipeline:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CodeStarConnections",
+      "Effect": "Allow",
+      "Action": [
+        "codestar-connections:GetConnection",
+        "codestar-connections:ListConnections",
+        "codestar-connections:UseConnection"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

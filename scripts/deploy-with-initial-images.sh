@@ -57,9 +57,21 @@ echo ""
 # Change to terraform directory
 cd terraform
 
-# Initialize Terraform
-echo "Initializing Terraform..."
-terraform init
+# Check if backend.config exists
+if [ ! -f "backend.config" ]; then
+    echo "ERROR: backend.config file not found in terraform directory"
+    echo ""
+    echo "Please follow these steps first:"
+    echo "1. Run scripts/init-terraform-backend.sh to create the S3 bucket and DynamoDB table"
+    echo "2. Copy backend.config.example to backend.config"
+    echo "3. Update backend.config with your AWS account ID"
+    echo "4. Run this script again"
+    exit 1
+fi
+
+# Initialize Terraform with backend config
+echo "Initializing Terraform with backend configuration..."
+terraform init -backend-config=backend.config
 
 echo ""
 echo "=== Starting Deployment ==="

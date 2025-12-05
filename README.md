@@ -45,54 +45,56 @@ If you prefer to handle ECR images manually, see the [ecs-rag-checklist.md](ecs-
 
 ## Architecture
 
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Internet      │    │   CodePipeline  │    │   GitHub Repo   │
-│                 │    │                 │    │                 │
-└─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
-          │                      │                      │
-          │              ┌───────▼───────┐              │
-          │              │  CodeBuild     │              │
-          │              │               │              │
-          │              └───────┬───────┘              │
-          │                      │                      │
-          │                      ▼                      │
-          │              ┌───────┬───────┐              │
-          │              │       │       │              │
-          │              │       │       │              │
-          │         ┌────▼────┐ │ ┌────▼────┐           │
-          │         │   ECR   │ │ │   ECR   │           │
-          │         │Backend  │ │ │Frontend │           │
-          │         └────┬────┘ │ └────┬────┘           │
-          │              │       │       │              │
-          ▼              ▼       ▼       ▼              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        VPC                                    │
-│  ┌─────────────────┐    ┌─────────────────┐                  │
-│  │  Public Subnets │    │ Private Subnets │                  │
-│  │                 │    │                 │                  │
-│  │  ┌───────────┐  │    │  ┌───────────┐  │                  │
-│  │  │    ALB    │  │    │  │    ECS    │  │                  │
-│  │  │           │  │    │  │  Cluster  │  │                  │
-│  │  └───────────┘  │    │  │           │  │                  │
-│  │                 │    │  │  ┌─────┐  │  │                  │
-│  │                 │    │  │  │Backend│  │  │                  │
-│  │                 │    │  │  │Service│  │  │                  │
-│  │                 │    │  │  └─────┘  │  │                  │
-│  │                 │    │  │           │  │                  │
-│  │                 │    │  │  ┌─────┐  │  │                  │
-│  │                 │    │  │  │Front- │  │  │                  │
-│  │                 │    │  │  │end    │  │  │                  │
-│  │                 │    │  │  │Service│  │  │                  │
-│  │                 │    │  │  └─────┘  │  │                  │
-│  │                 │    │  │           │  │                  │
-│  │                 │    │  │  ┌─────┐  │  │                  │
-│  │                 │    │  │  │ RDS │  │  │                  │
-│  │                 │    │  │  │ DB  │  │  │                  │
-│  │                 │    │  │  └─────┘  │  │                  │
-│  │                 │    │  └───────────┘  │                  │
-│  └─────────────────┘    └─────────────────┘                  │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph External["External Services"]
+        Internet[Internet]
+        GitHub[GitHub Repo]
+    end
+
+    subgraph CICD["CI/CD Pipeline"]
+        CodePipeline[CodePipeline]
+        CodeBuild[CodeBuild]
+        ECRBackend[ECR Backend]
+        ECRFrontend[ECR Frontend]
+    end
+
+    subgraph VPC["VPC"]
+        subgraph PublicSubnets["Public Subnets"]
+            ALB[Application Load Balancer]
+        end
+        
+        subgraph PrivateSubnets["Private Subnets"]
+            subgraph ECSCluster["ECS Cluster"]
+                BackendService[Backend Service]
+                FrontendService[Frontend Service]
+            end
+            RDS[(RDS Database)]
+        end
+    end
+
+    Internet -->|HTTPS| ALB
+    GitHub -->|Trigger| CodePipeline
+    CodePipeline -->|Build| CodeBuild
+    CodeBuild -->|Push Images| ECRBackend
+    CodeBuild -->|Push Images| ECRFrontend
+    ECRBackend -->|Pull| BackendService
+    ECRFrontend -->|Pull| FrontendService
+    ALB -->|Route| BackendService
+    ALB -->|Route| FrontendService
+    BackendService -->|Query| RDS
+    FrontendService -->|API Calls| BackendService
+
+    classDef external fill:#e1f5ff,stroke:#0366d6,stroke-width:2px
+    classDef cicd fill:#fff3cd,stroke:#f0ad4e,stroke-width:2px
+    classDef vpc fill:#d4edda,stroke:#28a745,stroke-width:2px
+    classDef compute fill:#cce5ff,stroke:#004085,stroke-width:2px
+    classDef database fill:#f8d7da,stroke:#721c24,stroke-width:2px
+    
+    class Internet,GitHub external
+    class CodePipeline,CodeBuild,ECRBackend,ECRFrontend cicd
+    class ALB,BackendService,FrontendService compute
+    class RDS database
 ```
 
 ## Project Structure

@@ -22,7 +22,3 @@ variable "db_username" {
 variable "db_name" {
   type = string
 }
-
-variable "ecs_security_group_id" {
-  type = string
-}

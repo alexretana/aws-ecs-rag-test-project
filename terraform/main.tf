@@ -26,7 +26,6 @@ module "rds" {
   private_subnet_ids  = module.vpc.private_subnet_ids
   db_username         = var.db_username
   db_name             = var.db_name
-  ecs_security_group_id = module.ecs.ecs_security_group_id
 
   depends_on = [module.vpc]
 }
@@ -62,6 +61,7 @@ module "ecs" {
   backend_target_group_arn  = module.alb.backend_target_group_arn
   frontend_target_group_arn = module.alb.frontend_target_group_arn
   db_secret_arn             = module.rds.secret_arn
+  rds_security_group_id     = module.rds.security_group_id
   log_group_name            = module.monitoring.log_group_name
   xray_sampling_rule_name   = module.monitoring.xray_sampling_rule_name
 

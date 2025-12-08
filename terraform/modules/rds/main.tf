@@ -38,14 +38,6 @@ resource "aws_security_group" "rds" {
   description = "Security group for RDS PostgreSQL"
   vpc_id      = var.vpc_id
 
-  ingress {
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [var.ecs_security_group_id]
-    description     = "PostgreSQL from ECS tasks"
-  }
-
   egress {
     from_port   = 0
     to_port     = 0
@@ -55,6 +47,10 @@ resource "aws_security_group" "rds" {
 
   tags = {
     Name = "${var.project_name}-${var.environment}-rds-sg"
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 

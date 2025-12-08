@@ -182,6 +182,18 @@ resource "aws_security_group" "ecs_tasks" {
   }
 }
 
+# Security Group Rule to allow ECS tasks to access RDS
+# This is created as a separate resource to break the circular dependency
+resource "aws_security_group_rule" "ecs_to_rds" {
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.ecs_tasks.id
+  security_group_id        = var.rds_security_group_id
+  description              = "PostgreSQL from ECS tasks"
+}
+
 # ECS Task Execution Role
 resource "aws_iam_role" "ecs_task_execution" {
   name = "${var.project_name}-${var.environment}-ecs-task-execution"

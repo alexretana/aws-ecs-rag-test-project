@@ -34,6 +34,10 @@ variable "db_secret_arn" {
   type = string
 }
 
+variable "rds_security_group_id" {
+  type = string
+}
+
 variable "log_group_name" {
   type = string
 }

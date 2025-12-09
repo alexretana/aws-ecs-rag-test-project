@@ -87,6 +87,10 @@ resource "null_resource" "push_placeholder_images" {
   ]
 
   provisioner "local-exec" {
+    # Use bash interpreter explicitly for cross-platform compatibility
+    # Requires Git Bash on Windows or native bash on Linux/macOS
+    interpreter = ["bash", "-c"]
+    
     command = <<-EOT
       # Authenticate to ECR
       aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com

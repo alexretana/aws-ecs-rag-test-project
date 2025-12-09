@@ -103,7 +103,7 @@ echo Generating Terraform plan...
 echo This will show all resources that will be created...
 echo.
 
-terraform plan
+terraform plan -out=tfplan
 if %errorlevel% neq 0 (
     echo ERROR: Terraform plan failed
     exit /b 1
@@ -123,20 +123,28 @@ echo.
 set /p APPLY="Do you want to proceed with applying this plan? (y/N): "
 if /i not "%APPLY%"=="y" (
     echo Deployment cancelled.
+    echo Cleaning up plan file...
+    del /f /q tfplan 2>nul
     exit /b 0
 )
 
-rem Apply Terraform
+rem Apply Terraform using saved plan
 echo.
-echo Running Terraform apply...
+echo Running Terraform apply with saved plan...
 echo This will take some time as it creates all resources and pushes images...
 echo.
 
-terraform apply
+terraform apply tfplan
 if %errorlevel% neq 0 (
     echo ERROR: Terraform apply failed
+    del /f /q tfplan 2>nul
     exit /b 1
 )
+
+rem Clean up plan file
+echo.
+echo Cleaning up plan file...
+del /f /q tfplan 2>nul
 
 echo.
 echo === Deployment Complete ===

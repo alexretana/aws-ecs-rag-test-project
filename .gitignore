@@ -6,6 +6,8 @@
 terraform.tfvars
 backend.config
 *.auto.tfvars
+tfplan
+*.tfplan
 
 # Python
 __pycache__/

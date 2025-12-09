@@ -96,7 +96,7 @@ echo "Generating Terraform plan..."
 echo "This will show all resources that will be created..."
 echo ""
 
-terraform plan
+terraform plan -out=tfplan
 
 echo ""
 echo "=== Terraform Plan Complete ==="
@@ -113,16 +113,23 @@ read -p "Do you want to proceed with applying this plan? (y/N): " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     echo "Deployment cancelled."
+    echo "Cleaning up plan file..."
+    rm -f tfplan
     exit 0
 fi
 
-# Apply Terraform
+# Apply Terraform using saved plan
 echo ""
-echo "Running Terraform apply..."
+echo "Running Terraform apply with saved plan..."
 echo "This will take some time as it creates all resources and pushes images..."
 echo ""
 
-terraform apply
+terraform apply tfplan
+
+# Clean up plan file
+echo ""
+echo "Cleaning up plan file..."
+rm -f tfplan
 
 echo ""
 echo "=== Deployment Complete ==="

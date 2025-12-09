@@ -28,7 +28,7 @@ resource "aws_guardduty_detector" "main" {
 # Enable ECS Runtime Monitoring
 resource "aws_guardduty_detector_feature" "ecs_runtime_monitoring" {
   detector_id = aws_guardduty_detector.main.id
-  name        = "ECS_RUNTIME_MONITORING"
+  name        = "RUNTIME_MONITORING"
   status      = "ENABLED"
 
   additional_configuration {

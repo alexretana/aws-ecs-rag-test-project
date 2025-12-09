@@ -4,4 +4,3 @@
 
 bucket         = "ecs-rag-project-tfstate-YOUR_ACCOUNT_ID"
 region         = "us-east-1"
-dynamodb_table = "ecs-rag-project-tflock"

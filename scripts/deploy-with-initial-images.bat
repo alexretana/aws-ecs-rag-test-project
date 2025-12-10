@@ -75,7 +75,7 @@ if not exist "backend.config" (
 
 rem Initialize Terraform with backend config
 echo Initializing Terraform with backend configuration...
-terraform init -backend-config=backend.config
+terraform init -backend-config=backend.config -reconfigure
 if %errorlevel% neq 0 (
     echo ERROR: Terraform init failed
     exit /b 1

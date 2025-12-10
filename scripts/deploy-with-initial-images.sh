@@ -71,7 +71,7 @@ fi
 
 # Initialize Terraform with backend config
 echo "Initializing Terraform with backend configuration..."
-terraform init -backend-config=backend.config
+terraform init -backend-config=backend.config -reconfigure
 
 echo ""
 echo "=== Starting Deployment ==="

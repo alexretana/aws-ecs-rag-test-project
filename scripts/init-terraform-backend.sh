@@ -39,14 +39,10 @@ aws s3api put-public-access-block \
         "RestrictPublicBuckets": true
     }'
 
-# Create DynamoDB table for state locking
-aws dynamodb create-table \
-    --table-name ${PROJECT_NAME}-tflock \
-    --attribute-definitions AttributeName=LockID,AttributeType=S \
-    --key-schema AttributeName=LockID,KeyType=HASH \
-    --billing-mode PAY_PER_REQUEST \
-    --region ${REGION}
-
-echo "Terraform backend created:"
+echo ""
+echo "Terraform backend created successfully:"
 echo "  S3 Bucket: ${BUCKET_NAME}"
-echo "  DynamoDB Table: ${PROJECT_NAME}-tflock"
+echo "  Region: ${REGION}"
+echo ""
+echo "Note: State locking will use S3-based lockfiles (.tflock)"
+echo "      No DynamoDB table is required with use_lockfile=true"

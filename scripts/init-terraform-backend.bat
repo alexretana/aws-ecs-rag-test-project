@@ -28,14 +28,12 @@ echo Blocking public access...
 aws s3api put-public-access-block --bucket %BUCKET_NAME% --public-access-block-configuration "{\"BlockPublicAcls\": true, \"IgnorePublicAcls\": true, \"BlockPublicPolicy\": true, \"RestrictPublicBuckets\": true}"
 if %errorlevel% neq 0 exit /b %errorlevel%
 
-rem Create DynamoDB table for state locking
-echo Creating DynamoDB table...
-aws dynamodb create-table --table-name %PROJECT_NAME%-tflock --attribute-definitions AttributeName=LockID,AttributeType=S --key-schema AttributeName=LockID,KeyType=HASH --billing-mode PAY_PER_REQUEST --region %REGION%
-if %errorlevel% neq 0 exit /b %errorlevel%
-
 echo.
-echo Terraform backend created:
+echo Terraform backend created successfully:
 echo   S3 Bucket: %BUCKET_NAME%
-echo   DynamoDB Table: %PROJECT_NAME%-tflock
+echo   Region: %REGION%
+echo.
+echo Note: State locking will use S3-based lockfiles (.tflock)
+echo       No DynamoDB table is required with use_lockfile=true
 
 endlocal

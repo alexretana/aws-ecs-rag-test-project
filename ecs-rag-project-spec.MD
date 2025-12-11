@@ -4221,3 +4221,56 @@ aws ecs describe-services \
 - Reduce VPC endpoints (accept NAT Gateway instead)
 - Scale down RDS to smaller instance
 - Stop resources when not in use
+
+---
+
+## Phase 2 Readiness Review - Deferred Decisions
+
+### Decisions Made
+
+Based on the Phase 2 readiness review, the following architectural decisions have been made:
+
+#### 1. Database Seeding Strategy
+**Decision**: Add PostgreSQL advisory lock to prevent race conditions
+- Auto-seed on first startup with protection using advisory lock (lock_id=1)
+- Only one ECS task can seed at a time, preventing duplicate data
+- Leverages existing PostgreSQL functionality without creating new resources
+- Implementation in `backend/app/db/database.py` and `backend/app/seed/corpus.py`
+
+#### 2. BACKEND_URL Environment Variable
+**Decision**: Hardcode the backend URL in buildspec.yml
+- Fixed value: `http://backend.ecs-rag.local:8000`
+- Replaces variable interpolation `$PROJECT_NAME` that wouldn't work at runtime
+- Uses existing service discovery namespace `ecs-rag.local`
+- No new resources required
+
+#### 3. X-Ray Sampling Rate
+**Decision**: Set to 100% for development visibility
+- Changed from 10% to 100% sampling rate
+- Better debugging visibility for learning project
+- Updated in `terraform/modules/monitoring/main.tf`
+- Appropriate since this is not a production environment
+
+#### 4. Bedrock Failure Behavior
+**Decision**: Keep fail-fast approach
+- Return 500 error to user after 3 retries with exponential backoff
+- No graceful degradation or circuit breaker pattern
+- Simpler implementation appropriate for learning project
+- Existing retry logic in `backend/app/rag/embeddings.py` and `backend/app/rag/generator.py`
+
+### Implementation Notes
+
+- All changes leverage existing Terraform resources
+- No new AWS resources need to be created
+- Advisory lock uses PostgreSQL's built-in `pg_advisory_lock()` function
+- Service discovery already configured in ECS module
+- X-Ray sampling is a simple configuration change
+
+### Next Steps for Phase 2
+
+With these decisions made, Phase 2 application development can proceed with:
+1. RAG pipeline implementation
+2. FastAPI backend development
+3. Streamlit frontend development
+4. Testing and validation
+5. CI/CD pipeline configuration

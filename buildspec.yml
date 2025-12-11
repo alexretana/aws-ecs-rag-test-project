@@ -1,0 +1,220 @@
+version: 0.2
+
+env:
+  variables:
+    DOCKER_BUILDKIT: "1"
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+
+  build:
+    commands:
+      - echo Build started on `date`
+      
+      # Build backend image
+      - echo Building backend Docker image...
+      - docker build -t $BACKEND_ECR_REPO:latest -t $BACKEND_ECR_REPO:$IMAGE_TAG ./backend
+      
+      # Build frontend image
+      - echo Building frontend Docker image...
+      - docker build -t $FRONTEND_ECR_REPO:latest -t $FRONTEND_ECR_REPO:$IMAGE_TAG ./frontend
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      
+      # Push backend images
+      - echo Pushing backend Docker image...
+      - docker push $BACKEND_ECR_REPO:latest
+      - docker push $BACKEND_ECR_REPO:$IMAGE_TAG
+      
+      # Push frontend images
+      - echo Pushing frontend Docker image...
+      - docker push $FRONTEND_ECR_REPO:latest
+      - docker push $FRONTEND_ECR_REPO:$IMAGE_TAG
+      
+      # Wait for ECR scan results
+      - echo Waiting for ECR scan results...
+      - |
+        for repo in "$PROJECT_NAME-$ENVIRONMENT-backend" "$PROJECT_NAME-$ENVIRONMENT-frontend"; do
+          echo "Checking scan for $repo:$IMAGE_TAG"
+          aws ecr wait image-scan-complete --repository-name $repo --image-id imageTag=$IMAGE_TAG --region $AWS_REGION || true
+          SCAN_FINDINGS=$(aws ecr describe-image-scan-findings --repository-name $repo --image-id imageTag=$IMAGE_TAG --region $AWS_REGION --query 'imageScanFindings.findingSeverityCounts' --output json 2>/dev/null || echo '{}')
+          echo "Scan findings for $repo: $SCAN_FINDINGS"
+          CRITICAL=$(echo $SCAN_FINDINGS | jq -r '.CRITICAL // 0')
+          if [ "$CRITICAL" != "0" ] && [ "$CRITICAL" != "null" ]; then
+            echo "WARNING: Critical vulnerabilities found in $repo"
+          fi
+        done
+      
+      # Generate task definition files for CodeDeploy
+      - echo Generating deployment artifacts...
+      
+      # Backend task definition
+      - |
+        cat > backend-taskdef.json << EOF
+        {
+          "family": "$PROJECT_NAME-$ENVIRONMENT-backend",
+          "networkMode": "awsvpc",
+          "requiresCompatibilities": ["FARGATE"],
+          "cpu": "512",
+          "memory": "1024",
+          "executionRoleArn": "arn:aws:iam::$AWS_ACCOUNT_ID:role/$PROJECT_NAME-$ENVIRONMENT-ecs-task-execution",
+          "taskRoleArn": "arn:aws:iam::$AWS_ACCOUNT_ID:role/$PROJECT_NAME-$ENVIRONMENT-ecs-task",
+          "containerDefinitions": [
+            {
+              "name": "backend",
+              "image": "<IMAGE1_NAME>",
+              "portMappings": [
+                {
+                  "containerPort": 8000,
+                  "hostPort": 8000,
+                  "protocol": "tcp"
+                }
+              ],
+              "essential": true,
+              "environment": [
+                {"name": "AWS_REGION", "value": "$AWS_REGION"},
+                {"name": "ENVIRONMENT", "value": "$ENVIRONMENT"},
+                {"name": "AWS_XRAY_DAEMON_ADDRESS", "value": "localhost:2000"}
+              ],
+              "secrets": [
+                {
+                  "name": "DB_SECRET",
+                  "valueFrom": "arn:aws:secretsmanager:$AWS_REGION:$AWS_ACCOUNT_ID:secret:$PROJECT_NAME-$ENVIRONMENT-db-credentials"
+                }
+              ],
+              "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                  "awslogs-group": "/ecs/$PROJECT_NAME-$ENVIRONMENT",
+                  "awslogs-region": "$AWS_REGION",
+                  "awslogs-stream-prefix": "backend"
+                }
+              },
+              "healthCheck": {
+                "command": ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"],
+                "interval": 30,
+                "timeout": 5,
+                "retries": 3,
+                "startPeriod": 60
+              }
+            },
+            {
+              "name": "xray-daemon",
+              "image": "amazon/aws-xray-daemon:latest",
+              "portMappings": [
+                {
+                  "containerPort": 2000,
+                  "hostPort": 2000,
+                  "protocol": "udp"
+                }
+              ],
+              "essential": false,
+              "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                  "awslogs-group": "/ecs/$PROJECT_NAME-$ENVIRONMENT",
+                  "awslogs-region": "$AWS_REGION",
+                  "awslogs-stream-prefix": "xray"
+                }
+              },
+              "cpu": 32,
+              "memory": 256
+            }
+          ]
+        }
+        EOF
+      
+      # Frontend task definition
+      - |
+        cat > frontend-taskdef.json << EOF
+        {
+          "family": "$PROJECT_NAME-$ENVIRONMENT-frontend",
+          "networkMode": "awsvpc",
+          "requiresCompatibilities": ["FARGATE"],
+          "cpu": "256",
+          "memory": "512",
+          "executionRoleArn": "arn:aws:iam::$AWS_ACCOUNT_ID:role/$PROJECT_NAME-$ENVIRONMENT-ecs-task-execution",
+          "taskRoleArn": "arn:aws:iam::$AWS_ACCOUNT_ID:role/$PROJECT_NAME-$ENVIRONMENT-ecs-task",
+          "containerDefinitions": [
+            {
+              "name": "frontend",
+              "image": "<IMAGE2_NAME>",
+              "portMappings": [
+                {
+                  "containerPort": 8501,
+                  "hostPort": 8501,
+                  "protocol": "tcp"
+                }
+              ],
+              "essential": true,
+              "environment": [
+                {"name": "BACKEND_URL", "value": "http://backend.ecs-rag.local:8000"},
+                {"name": "ENVIRONMENT", "value": "$ENVIRONMENT"}
+              ],
+              "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                  "awslogs-group": "/ecs/$PROJECT_NAME-$ENVIRONMENT",
+                  "awslogs-region": "$AWS_REGION",
+                  "awslogs-stream-prefix": "frontend"
+                }
+              },
+              "healthCheck": {
+                "command": ["CMD-SHELL", "curl -f http://localhost:8501/_stcore/health || exit 1"],
+                "interval": 30,
+                "timeout": 5,
+                "retries": 3,
+                "startPeriod": 60
+              }
+            }
+          ]
+        }
+        EOF
+      
+      # Backend AppSpec
+      - |
+        cat > backend-appspec.yml << EOF
+        version: 0.0
+        Resources:
+          - TargetService:
+              Type: AWS::ECS::Service
+              Properties:
+                TaskDefinition: <TASK_DEFINITION>
+                LoadBalancerInfo:
+                  ContainerName: "backend"
+                  ContainerPort: 8000
+        EOF
+      
+      # Frontend AppSpec
+      - |
+        cat > frontend-appspec.yml << EOF
+        version: 0.0
+        Resources:
+          - TargetService:
+              Type: AWS::ECS::Service
+              Properties:
+                TaskDefinition: <TASK_DEFINITION>
+                LoadBalancerInfo:
+                  ContainerName: "frontend"
+                  ContainerPort: 8501
+        EOF
+      
+      # Create imageDetail.json for CodeDeploy
+      - printf '{"ImageURI":"%s"}' $BACKEND_ECR_REPO:$IMAGE_TAG > backend-imageDetail.json
+      - printf '{"ImageURI":"%s"}' $FRONTEND_ECR_REPO:$IMAGE_TAG > frontend-imageDetail.json
+
+artifacts:
+  files:
+    - backend-taskdef.json
+    - frontend-taskdef.json
+    - backend-appspec.yml
+    - frontend-appspec.yml
+    - backend-imageDetail.json
+    - frontend-imageDetail.json

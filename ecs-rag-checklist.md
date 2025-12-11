@@ -2,42 +2,51 @@
 
 This checklist provides a step-by-step guide for implementing the ECS Fargate RAG System based on the project specification.
 
+## Phase 2 Decisions Applied
+
+The following decisions from Phase 2 Readiness Review have been implemented:
+
+- [x] **Database Seeding**: Added PostgreSQL advisory lock (lock_id=1) to prevent race conditions during auto-seeding
+- [x] **BACKEND_URL**: Fixed hardcoded value in buildspec.yml to `http://backend.ecs-rag.local:8000`
+- [x] **X-Ray Sampling**: Updated to 100% sampling rate for development visibility
+- [x] **Bedrock Errors**: Maintained fail-fast approach with 3 retries and exponential backoff
+
 ---
 
 ## Phase 0: Prerequisites and Setup
 
-- [ ] **0.1** Install AWS CLI v2
-- [ ] **0.2** Install Terraform
-- [ ] **0.3** Install Docker
-- [ ] **0.4** Configure AWS credentials (`aws configure`)
-- [ ] **0.5** Request Bedrock model access for Titan Embeddings and Llama 3 8B Instruct
-- [ ] **0.6** Create project directory structure (run the `mkdir -p` command from spec)
-- [ ] **0.7** Create CodeStar connection for GitHub and complete OAuth handshake
+- [x] **0.1** Install AWS CLI v2
+- [x] **0.2** Install Terraform
+- [x] **0.3** Install Docker
+- [x] **0.4** Configure AWS credentials (`aws configure`)
+- [x] **0.5** Request Bedrock model access for Titan Embeddings and Llama 3 8B Instruct
+- [x] **0.6** Create project directory structure (run the `mkdir -p` command from spec)
+- [x] **0.7** Create CodeStar connection for GitHub and complete OAuth handshake
 
 ---
 
 ## Phase 1: Terraform Infrastructure
 
 ### Backend Setup (State Management)
-- [ ] **1.1** Create `scripts/init-terraform-backend.sh` script
-- [ ] **1.2** Run script to create S3 bucket and DynamoDB table for Terraform state
+- [x] **1.1** Create `scripts/init-terraform-backend.sh` script
+- [x] **1.2** Run script to create S3 bucket and DynamoDB table for Terraform state
 
 ### Core Terraform Files
-- [ ] **1.3** Create `terraform/providers.tf` - AWS provider with default tags
-- [ ] **1.4** Create `terraform/backend.tf` - S3 backend configuration
-- [ ] **1.5** Create `terraform/variables.tf` - Project variables
-- [ ] **1.6** Create `terraform/outputs.tf` - ALB DNS, ECR URLs, etc.
+- [x] **1.3** Create `terraform/providers.tf` - AWS provider with default tags
+- [x] **1.4** Create `terraform/backend.tf` - S3 backend configuration
+- [x] **1.5** Create `terraform/variables.tf` - Project variables
+- [x] **1.6** Create `terraform/outputs.tf` - ALB DNS, ECR URLs, etc.
 
 ### VPC Module
-- [ ] **1.7** Create `terraform/modules/vpc/variables.tf`
-- [ ] **1.8** Create `terraform/modules/vpc/main.tf`:
+- [x] **1.7** Create `terraform/modules/vpc/variables.tf`
+- [x] **1.8** Create `terraform/modules/vpc/main.tf`:
   - VPC with DNS support
   - Internet Gateway
   - Public subnets (2 AZs)
   - Private subnets (2 AZs)
   - Public and private route tables
   - Security group for VPC endpoints
-- [ ] **1.9** Add VPC endpoints:
+- [x] **1.9** Add VPC endpoints:
   - S3 Gateway endpoint
   - ECR API interface endpoint
   - ECR Docker interface endpoint
@@ -46,19 +55,19 @@ This checklist provides a step-by-step guide for implementing the ECS Fargate RA
   - Bedrock Runtime endpoint
   - X-Ray endpoint
   - ECS, ECS Agent, ECS Telemetry endpoints
-- [ ] **1.10** Create `terraform/modules/vpc/outputs.tf`
+- [x] **1.10** Create `terraform/modules/vpc/outputs.tf`
 
 ### Security Module
-- [ ] **1.11** Create `terraform/modules/security/variables.tf`
-- [ ] **1.12** Create `terraform/modules/security/main.tf`:
+- [x] **1.11** Create `terraform/modules/security/variables.tf`
+- [x] **1.12** Create `terraform/modules/security/main.tf`:
   - GuardDuty detector
   - ECS Runtime Monitoring feature
   - Malware protection
-- [ ] **1.13** Create `terraform/modules/security/outputs.tf`
+- [x] **1.13** Create `terraform/modules/security/outputs.tf`
 
 ### RDS Module
-- [ ] **1.14** Create `terraform/modules/rds/variables.tf`
-- [ ] **1.15** Create `terraform/modules/rds/main.tf`:
+- [x] **1.14** Create `terraform/modules/rds/variables.tf`
+- [x] **1.15** Create `terraform/modules/rds/main.tf`:
   - Random password generation
   - Secrets Manager secret for DB credentials
   - DB subnet group
@@ -66,63 +75,63 @@ This checklist provides a step-by-step guide for implementing the ECS Fargate RA
   - DB parameter group (for pgvector)
   - RDS PostgreSQL 15 instance
   - IAM role for enhanced monitoring
-- [ ] **1.16** Create `terraform/modules/rds/outputs.tf`
+- [x] **1.16** Create `terraform/modules/rds/outputs.tf`
 
 ### Monitoring Module
-- [ ] **1.17** Create `terraform/modules/monitoring/variables.tf`
-- [ ] **1.18** Create `terraform/modules/monitoring/main.tf`:
+- [x] **1.17** Create `terraform/modules/monitoring/variables.tf`
+- [x] **1.18** Create `terraform/modules/monitoring/main.tf`:
   - CloudWatch Log Group
   - X-Ray Sampling Rule
   - CloudWatch Dashboard
   - CloudWatch Alarms (CPU, Memory)
-- [ ] **1.19** Create `terraform/modules/monitoring/outputs.tf`
+- [x] **1.19** Create `terraform/modules/monitoring/outputs.tf`
 
 ### ALB Module
-- [ ] **1.20** Create `terraform/modules/alb/variables.tf`
-- [ ] **1.21** Create `terraform/modules/alb/main.tf`:
+- [x] **1.20** Create `terraform/modules/alb/variables.tf`
+- [x] **1.21** Create `terraform/modules/alb/main.tf`:
   - ALB security group
   - Application Load Balancer
   - Backend target groups (Green/Blue)
   - Frontend target groups (Green/Blue)
   - HTTP listener
   - Listener rules for path-based routing
-- [ ] **1.22** Create `terraform/modules/alb/outputs.tf`
+- [x] **1.22** Create `terraform/modules/alb/outputs.tf`
 
 ### ECS Module
-- [ ] **1.23** Create `terraform/modules/ecs/variables.tf`
-- [ ] **1.24** Create `terraform/modules/ecs/main.tf`:
+- [x] **1.23** Create `terraform/modules/ecs/variables.tf`
+- [x] **1.24** Create `terraform/modules/ecs/main.tf`:
   - ECR repositories (backend, frontend)
   - ECR lifecycle policies
   - ECS Cluster with Container Insights
   - Capacity provider strategy
   - ECS security group
-- [ ] **1.25** Add IAM roles:
+- [x] **1.25** Add IAM roles:
   - ECS task execution role (with secrets access)
   - ECS task role (Bedrock, X-Ray, Logs, Secrets permissions)
-- [ ] **1.26** Add task definitions and services:
+- [x] **1.26** Add task definitions and services:
   - Backend task definition (with X-Ray sidecar)
   - Frontend task definition
   - Service discovery namespace
   - Backend ECS service (CODE_DEPLOY controller)
   - Frontend ECS service (CODE_DEPLOY controller)
-- [ ] **1.27** Create `terraform/modules/ecs/outputs.tf`
+- [x] **1.27** Create `terraform/modules/ecs/outputs.tf`
 
 ### CodePipeline Module
-- [ ] **1.28** Create `terraform/modules/codepipeline/variables.tf`
-- [ ] **1.29** Create `terraform/modules/codepipeline/main.tf`:
+- [x] **1.28** Create `terraform/modules/codepipeline/variables.tf`
+- [x] **1.29** Create `terraform/modules/codepipeline/main.tf`:
   - S3 bucket for artifacts
   - CodeBuild project
   - CodeDeploy applications (backend, frontend)
   - CodeDeploy deployment groups (Blue/Green)
   - CodePipeline (Source → Build → Deploy stages)
-- [ ] **1.30** Add IAM roles:
+- [x] **1.30** Add IAM roles:
   - CodeBuild role (ECR, S3, Logs access)
   - CodeDeploy role
   - CodePipeline role
-- [ ] **1.31** Create `terraform/modules/codepipeline/outputs.tf`
+- [x] **1.31** Create `terraform/modules/codepipeline/outputs.tf`
 
 ### Root Module
-- [ ] **1.32** Create `terraform/main.tf` wiring all modules together with proper dependencies
+- [x] **1.32** Create `terraform/main.tf` wiring all modules together with proper dependencies
 
 ---
 

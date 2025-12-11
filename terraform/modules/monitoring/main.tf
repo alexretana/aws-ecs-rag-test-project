@@ -14,7 +14,7 @@ resource "aws_xray_sampling_rule" "main" {
   priority       = 1000
   version        = 1
   reservoir_size = 5
-  fixed_rate     = 0.1  # 10% sampling
+  fixed_rate     = 1.0  # 100% sampling for development visibility
   url_path       = "*"
   host           = "*"
   http_method    = "*"

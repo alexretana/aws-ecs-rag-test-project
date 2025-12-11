@@ -47,8 +47,17 @@ phases:
           SCAN_FINDINGS=$(aws ecr describe-image-scan-findings --repository-name $repo --image-id imageTag=$IMAGE_TAG --region $AWS_REGION --query 'imageScanFindings.findingSeverityCounts' --output json 2>/dev/null || echo '{}')
           echo "Scan findings for $repo: $SCAN_FINDINGS"
           CRITICAL=$(echo $SCAN_FINDINGS | jq -r '.CRITICAL // 0')
+          HIGH=$(echo $SCAN_FINDINGS | jq -r '.HIGH // 0')
+          MEDIUM=$(echo $SCAN_FINDINGS | jq -r '.MEDIUM // 0')
           if [ "$CRITICAL" != "0" ] && [ "$CRITICAL" != "null" ]; then
-            echo "WARNING: Critical vulnerabilities found in $repo"
+            echo "ERROR: Critical vulnerabilities found in $repo"
+            exit 1
+          elif [ "$HIGH" != "0" ] && [ "$HIGH" != "null" ]; then
+            echo "WARNING: High vulnerabilities found in $repo"
+          elif [ "$MEDIUM" != "0" ] && [ "$MEDIUM" != "null" ]; then
+            echo "WARNING: Medium vulnerabilities found in $repo"
+          else
+            echo "INFO: No critical or high vulnerabilities found in $repo"
           fi
         done
       

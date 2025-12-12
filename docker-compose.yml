@@ -1,0 +1,92 @@
+
+version: '3.8'
+
+services:
+  # PostgreSQL with pgvector extension for vector storage
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: rag-postgres
+    environment:
+      POSTGRES_DB: rag_db
+      POSTGRES_USER: rag_user
+      POSTGRES_PASSWORD: rag_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./local-dev/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rag_user -d rag_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rag-network
+
+  # LocalStack for mocking AWS services
+  localstack:
+    image: localstack/localstack:latest
+    container_name: rag-localstack
+    ports:
+      - "4566:4566"  # LocalStack edge port
+      - "4510-4559:4510-4559"  # Service-specific ports
+    environment:
+      - DEBUG=1
+      - SERVICES=bedrock,secretsmanager
+      - DATA_DIR=/tmp/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    volumes:
+      - localstack_data:/tmp/localstack
+      - ./local-dev/localstack-setup:/docker-entrypoint-initaws.d
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - rag-network
+
+  # Backend FastAPI application
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rag-backend
+    environment:
+      - ENVIRONMENT=local
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=rag_db
+      - DB_USERNAME=rag_user
+      - DB_PASSWORD=rag_password
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - EMBEDDING_MODEL_ID=amazon.titan-embed-text-v1
+      - LLM_MODEL_ID=meta.llama3-8b-instruct-v1:0
+      - CHUNK_SIZE=500
+      - CHUNK_OVERLAP=50
+      - TOP_K_RESULTS=5
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_started
+    volumes:
+      - ./backend:/app
+    networks:
+      - rag-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend Streamlit application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rag-frontend
+    environment:
+      - BACKEND_URL=http://backend:8000
+    ports:
+      - "8501:8501"
